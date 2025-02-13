@@ -1,4 +1,4 @@
-import WidthWrapper from "@/component/WidthWrapper";
+import WidthWrapper from "@/components/WidthWrapper";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
