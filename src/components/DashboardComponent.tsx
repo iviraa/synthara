@@ -2,14 +2,31 @@
 
 import { trpc } from "@/app/_trpc/client";
 import UploadButton from "./UploadButton";
-import { Ghost } from "lucide-react";
+import { Ghost, Loader2 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { Button } from "./ui/button";
 import { Trash2, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 const DashboardComponent = () => {
+  const [deletelingFile, setDeletelingFile] = useState<string | null>(null);
+
+  const utils = trpc.useContext();
+
   const { data: files, isLoading } = trpc.getUserFiles.useQuery();
+
+  const { mutate: deleteFile } = trpc.deleteFile.useMutation({
+    onSuccess: () => {
+      utils.getUserFiles.invalidate();
+    },
+    onMutate({ id }) {
+      setDeletelingFile(id);
+    },
+    onSettled() {
+      setDeletelingFile(null);
+    },
+  });
 
   return (
     <div className="mx-auto max-w-7xl md:p-10">
@@ -39,10 +56,15 @@ const DashboardComponent = () => {
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="ghost"
+                    onClick={() => deleteFile({ id: file.id })}
                     size="icon"
                     className="text-red-500 hover:text-red-700 hover:bg-red-100"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deletelingFile === file.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin " />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                   <Link
                     href={file.url}
