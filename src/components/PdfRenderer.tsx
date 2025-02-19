@@ -1,8 +1,7 @@
 "use client";
 
 import { Document, Page, pdfjs } from "react-pdf";
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js`;
-
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 import {
   ChevronDown,
@@ -36,12 +35,12 @@ import {
 import SimpleBar from "simplebar-react";
 import PdfFullscreen from "./PdfFullscreen";
 
-
 interface PdfRendererProps {
   url: string;
 }
 
 const PdfRenderer = ({ url }: PdfRendererProps) => {
+
   const { toast } = useToast();
 
   const [numPages, setNumPages] = useState<number>();

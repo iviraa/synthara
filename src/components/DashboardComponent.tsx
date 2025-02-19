@@ -67,7 +67,7 @@ const DashboardComponent = () => {
                     )}
                   </Button>
                   <Link
-                    href={file.url}
+                    href={`/dashboard/${file.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
