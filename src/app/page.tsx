@@ -12,7 +12,7 @@ export default function Home() {
           <p className="text-sm font-semibold text-gray-700">Use synthara.ai</p>
         </div>
         <h1 className="max-w-5xl text-5xl font-bold sm:text-6xl lg:text-7xl">
-          Let your <span className="text-orange-400">research</span> talk to
+          Let your <span className="text-[#8D6C9F]">research</span> talk to
           you.
         </h1>
         <p className="mt-5 max-w-prose sm:text-lg text-zinc-700">
@@ -23,7 +23,7 @@ export default function Home() {
         <Link
           className={buttonVariants({
             size: "lg",
-            className: "mt-10",
+            className: "mt-10 ",
           })}
           href="/dashboard"
           target="_blank"
@@ -42,7 +42,7 @@ export default function Home() {
                 clipPath:
                   "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
               }}
-              className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#bd9070] to-[#da8fda] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+              className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ED7899] to-[#8D6C9F] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
             />
           </div>
 
@@ -51,10 +51,10 @@ export default function Home() {
               <div className="mt-16 flow-root sm:mt-24">
                 <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
                   <Image
-                    src="/dashboard-preview.jpg"
+                    src="/dashboard.png"
                     alt="preview"
-                    width={1364}
-                    height={866}
+                    width={1366}
+                    height={816}
                     quality={100}
                     className="rounded-md bg-white p-2 sm:p=8 md:p-20 shadow-2xl ring-1 ring-gray-900/10 "
                   ></Image>
@@ -72,7 +72,7 @@ export default function Home() {
                 clipPath:
                   "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
               }}
-              className="relative left-[calc(50%-13rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ddb191] to-[#ec8815] opacity-70 sm:left-[calc(50%-36rem)] sm:w-[72.1875rem]"
+              className="relative left-[calc(50%-13rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ED7899] to-[#8D6C9F] opacity-70 sm:left-[calc(50%-36rem)] sm:w-[72.1875rem]"
             />
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function Home() {
         <ol className="my-8 space-y-4 pt-8 md:flex md:space-x-12 md:space-y-0">
           <li className="md:flex-1">
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-top-2 md:pb-0 md:pl-0 md:pt-4">
-              <span className="text-sm font-medium text-orange-600">
+              <span className="text-sm font-bold text-[#8D6C9F]">
                 Step 1
               </span>
               <span className="text-xl font-semibold">
@@ -103,7 +103,7 @@ export default function Home() {
                 Start out with a free plan or choose our{" "}
                 <Link
                   href={"/pricing"}
-                  className="text-orange-700 underline-offset-2"
+                  className="text-[#8D6C9F] font-bold underline-offset-2"
                 >
                   pro plan.
                 </Link>
@@ -112,7 +112,7 @@ export default function Home() {
           </li>
           <li className="md:flex-1">
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-top-2 md:pb-0 md:pl-0 md:pt-4">
-              <span className="text-sm font-medium text-orange-600">
+              <span className="text-sm font-bold text-[#8D6C9F]">
                 Step 2
               </span>
               <span className="text-xl font-semibold">
@@ -126,7 +126,7 @@ export default function Home() {
           </li>
           <li className="md:flex-1">
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-top-2 md:pb-0 md:pl-0 md:pt-4">
-              <span className="text-sm font-medium text-orange-600">
+              <span className="text-sm font-bold text-[#8D6C9F]">
                 Step 3
               </span>
               <span className="text-xl font-semibold">
@@ -134,7 +134,7 @@ export default function Home() {
               </span>
               <span className="mt-2 text-zinc-700">
                 It&apos;s that simple. Try out{" "}
-                <span className=" font-semibold text-orange-600">Synthara</span>{" "}
+                <span className="font-bold text-[#8D6C9F]">Synthara</span>{" "}
                 today - it really takes you less than a minute.
               </span>
             </div>

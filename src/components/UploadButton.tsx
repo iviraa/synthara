@@ -105,7 +105,7 @@ const UploadDropzone = () => {
               {acceptedFiles && acceptedFiles[0] ? (
                 <div className="max-w-xs bg-white flex items-center rounded-md overflow-hidden outline outline-[1px] outline-zinc-200 divide-x divide-zinc-200">
                   <div className="px-3 py-2 h-full grid place-items-center">
-                    <File className="h-4 w-4 text-blue-500" />
+                    <File className="h-4 w-4 text-[#8D6C9F]" />
                   </div>
                   <div className="px-3 py-2 h-full text-sm truncate">
                     {acceptedFiles[0].name}
@@ -116,16 +116,11 @@ const UploadDropzone = () => {
               {isUploading ? (
                 <div className="w-full mt-4 max-w-xs mx-auto">
                   <Progress
-                    // indicatorColor={
-                    //   uploadProgress === 100
-                    //     ? 'bg-green-500'
-                    //     : ''
-                    // }
                     value={uploadProgress}
                     className="h-1 w-full bg-zinc-200"
                   />
                   {uploadProgress === 100 ? (
-                    <div className="flex gap-1 items-center justify-center text-sm text-zinc-700 text-center pt-2">
+                    <div className="flex gap-1 items-center justify-center text-sm text-[#8D6C9F] text-center pt-2">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       Redirecting...
                     </div>
