@@ -1,9 +1,17 @@
 import Link from "next/link";
 import WidthWrapper from "./WidthWrapper";
 import { buttonVariants } from "./ui/button";
-import { LoginLink, RegisterLink } from "@kinde-oss/kinde-auth-nextjs/server";
+import {
+  getKindeServerSession,
+  LoginLink,
+  LogoutLink,
+  RegisterLink,
+} from "@kinde-oss/kinde-auth-nextjs/server";
 
-const Navbar = () => {
+const Navbar = async () => {
+  const { isAuthenticated } = getKindeServerSession();
+  const isUserAuthenticated = await isAuthenticated();
+
   return (
     <nav className="sticky h-14 inset-x-0 top-0 z-30 w-full border-b border-gray-200 bg-white/75 backdrop-blur-lg transition-all">
       <WidthWrapper>
@@ -24,22 +32,44 @@ const Navbar = () => {
                 Dashboard
               </Link>
 
-              <LoginLink
-                className={buttonVariants({
-                  variant: "ghost",
-                  size: "sm",
-                })}
-              >
-                Sign in
-              </LoginLink>
+              {isUserAuthenticated ? (
+                <Link
+                  href="/dashboard"
+                  className={buttonVariants({
+                    variant: "ghost",
+                    size: "sm",
+                  })}
+                >
+                  My Files
+                </Link>
+              ) : (
+                <LoginLink
+                  className={buttonVariants({
+                    variant: "ghost",
+                    size: "sm",
+                  })}
+                >
+                  Sign in
+                </LoginLink>
+              )}
 
-              <RegisterLink
-                className={buttonVariants({
-                  size: "sm",
-                })}
-              >
-                Join now
-              </RegisterLink>
+              {isUserAuthenticated ? (
+                <LogoutLink
+                  className={buttonVariants({
+                    size: "sm",
+                  })}
+                >
+                  Logout
+                </LogoutLink>
+              ) : (
+                <RegisterLink
+                  className={buttonVariants({
+                    size: "sm",
+                  })}
+                >
+                  Join now
+                </RegisterLink>
+              )}
             </>
           </div>
         </div>
