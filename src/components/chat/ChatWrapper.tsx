@@ -9,20 +9,20 @@ import Messages from "./Messages";
 import { ChatContextProvider } from "./ChatContext";
 
 interface ChatWrapperProps {
-  fileId: string;
+  workspaceId: string;
 }
 
-const ChatWrapper = ({ fileId }: ChatWrapperProps) => {
-  const { data, isLoading } = trpc.getFileStatus.useQuery(
+const ChatWrapper = ({ workspaceId }: ChatWrapperProps) => {
+  const { data, isLoading } = trpc.getWorkspaceStatus.useQuery(
     {
-      id: fileId,
+      id: workspaceId,
     },
-    {
-      refetchInterval: (query) => {
-        const status = query.state.data?.status;
-        return status === "SUCCESS" || status === "FAILED" ? false : 500;
-      },
-    }
+    // {
+    //   refetchInterval: (query) => {
+    //     const status = query.state.data?.status;
+    //     return status === "SUCCESS" || status === "FAILED" ? false : 500;
+    //   },
+    // }
   );
 
   if (isLoading)
@@ -86,10 +86,10 @@ const ChatWrapper = ({ fileId }: ChatWrapperProps) => {
     );
 
   return (
-    <ChatContextProvider fileId={fileId}>
+    <ChatContextProvider workspaceId={workspaceId}>
       <div className='relative min-h-full bg-zinc-50 flex divide-y divide-zinc-200 flex-col justify-between gap-2'>
         <div className='flex-1 justify-between flex flex-col mb-28'>
-          <Messages fileId={fileId} />
+          <Messages workspaceId={workspaceId} />
         </div>
 
         <ChatInput />

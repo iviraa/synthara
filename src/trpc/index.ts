@@ -35,6 +35,15 @@ export const appRouter = router({
 
     return { success: true };
   }),
+  getUserWorkspaces: privateProcedure.query(async ({ ctx }) => {
+    const { userId } = ctx;
+
+    return await db.workspace.findMany({
+      where: {
+        userId,
+      },
+    });
+  }),
   getUserFiles: privateProcedure.query(async ({ ctx }) => {
     const { userId, user } = ctx;
 
@@ -65,30 +74,31 @@ export const appRouter = router({
 
       return file;
     }),
-  getFileMessages: privateProcedure.input(
+  getWorkspaceMessages: privateProcedure
+    .input(
       z.object({
         limit: z.number().min(1).max(100).nullish(),
         cursor: z.string().nullish(),
-        fileId: z.string(),
+        workspaceId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
       const { userId } = ctx;
-      const { fileId, cursor } = input;
+      const { workspaceId, cursor } = input;
       const limit = input.limit ?? INFINITE_QUERY_LIMIT;
 
-      const file = await db.file.findFirst({
+      const workspace = await db.workspace.findFirst({
         where: {
-          id: fileId,
+          id: workspaceId,
           userId,
         },
       });
-      if (!file) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!workspace) throw new TRPCError({ code: "NOT_FOUND" });
 
       const messages = await db.message.findMany({
         take: limit + 1,
         where: {
-          fileId,
+          workspaceId,
         },
         orderBy: {
           createdAt: "desc",
@@ -129,6 +139,42 @@ export const appRouter = router({
       }
 
       return { status: file.uploadStatus };
+    }),
+  getWorkspaceStatus: privateProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const files = await db.file.findMany({
+        where: {
+          workspaceId: input.id,
+          userId: ctx.userId,
+        },
+        select: {
+          id: true,
+          name: true,
+          uploadStatus: true,
+          url: true,
+          key: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      console.log("Files found:", files);
+
+      console.log("Fetching messages for workspace:", input.id);
+
+
+
+      if (!files.length) {
+        return { status: "PENDING" as const };
+      }
+
+      const allUploaded = files.every(
+        (file) => file.uploadStatus === "SUCCESS"
+      );
+
+      console.log("saatus:", allUploaded);
+
+      return { status: allUploaded ? "SUCCESS" : "FAILED" };
     }),
   deleteFile: privateProcedure
     .input(z.object({ id: z.string() }))

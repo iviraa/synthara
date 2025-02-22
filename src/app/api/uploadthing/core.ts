@@ -51,7 +51,6 @@ export const ourFileRouter = {
 
         const pageLevelDocs = await loader.load();
 
-     
         const pineconeIndex = pinecone.Index("synthara");
 
         const embeddings = new OpenAIEmbeddings({
@@ -72,7 +71,6 @@ export const ourFileRouter = {
             uploadStatus: "SUCCESS",
           },
         });
-
       } catch (error) {
         await db.file.update({
           where: {
@@ -82,6 +80,37 @@ export const ourFileRouter = {
             uploadStatus: "FAILED",
           },
         });
+      }
+    }),
+  imageUploader: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(async ({ req }) => {
+      const { getUser } = getKindeServerSession();
+      const user = await getUser();
+      if (!user?.id) throw new Error("UNAUTHORIZED");
+
+      return { userId: user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      try {
+        const workspace = await db.workspace.findFirst({
+          where: { userId: metadata.userId },
+        });
+
+        if (!workspace) throw new Error("Workspace not found for this user");
+
+        await db.workspace.update({
+          where: { 
+            id: workspace.id },
+          data: { 
+            imageUrl: file.url },
+        });
+      } catch (error) {
+        console.error("Image upload failed:", error);
       }
     }),
 } satisfies FileRouter;

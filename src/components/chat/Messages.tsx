@@ -8,16 +8,16 @@ import { ChatContext } from "./ChatContext";
 import { useIntersection } from "@mantine/hooks";
 
 interface MessagesProps {
-  fileId: string;
+  workspaceId: string;
 }
 
-const Messages = ({ fileId }: MessagesProps) => {
+const Messages = ({ workspaceId }: MessagesProps) => {
   const { isLoading: isAiThinking } = useContext(ChatContext);
 
   const { data, isLoading, fetchNextPage } =
-    trpc.getFileMessages.useInfiniteQuery(
+    trpc.getWorkspaceMessages.useInfiniteQuery(
       {
-        fileId,
+        workspaceId,
         limit: INFINITE_QUERY_LIMIT,
       },
       {
