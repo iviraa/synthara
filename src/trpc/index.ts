@@ -35,14 +35,32 @@ export const appRouter = router({
 
     return { success: true };
   }),
-  getUserFiles: privateProcedure.query(async ({ ctx }) => {
-    const { userId, user } = ctx;
+  getUserWorkspaces: privateProcedure.query(async ({ ctx }) => {
+    const { userId } = ctx;
 
-    return await db.file.findMany({
+    return await db.workspace.findMany({
       where: {
         userId,
       },
     });
+  }),
+  getUserFiles: privateProcedure.query(async ({ ctx }) => {
+    const { userId } = ctx;
+
+    const workspaces = await db.workspace.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        File: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+
+    return workspaces;
   }),
   getFile: privateProcedure
     .input(z.object({ key: z.string() }))
@@ -65,30 +83,58 @@ export const appRouter = router({
 
       return file;
     }),
-  getFileMessages: privateProcedure.input(
+  createWorkspace: privateProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Workspace name is required"),
+        imageUrl: z.string().url("Please provide a valid image URL"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      const workspace = await db.workspace.create({
+        data: {
+          name: input.name,
+          imageUrl: input.imageUrl,
+          userId,
+        },
+      });
+
+      return workspace;
+    }),
+  getWorkspaceMessages: privateProcedure
+    .input(
       z.object({
         limit: z.number().min(1).max(100).nullish(),
         cursor: z.string().nullish(),
-        fileId: z.string(),
+        workspaceId: z.string(),
       })
     )
     .query(async ({ ctx, input }) => {
       const { userId } = ctx;
-      const { fileId, cursor } = input;
+      const { workspaceId, cursor } = input;
       const limit = input.limit ?? INFINITE_QUERY_LIMIT;
 
-      const file = await db.file.findFirst({
+      const workspace = await db.workspace.findFirst({
         where: {
-          id: fileId,
+          id: workspaceId,
           userId,
         },
       });
-      if (!file) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!workspace) throw new TRPCError({ code: "NOT_FOUND" });
 
       const messages = await db.message.findMany({
         take: limit + 1,
         where: {
-          fileId,
+          workspaceId,
         },
         orderBy: {
           createdAt: "desc",
@@ -130,6 +176,40 @@ export const appRouter = router({
 
       return { status: file.uploadStatus };
     }),
+  getWorkspaceStatus: privateProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const files = await db.file.findMany({
+        where: {
+          workspaceId: input.id,
+          userId: ctx.userId,
+        },
+        select: {
+          id: true,
+          name: true,
+          uploadStatus: true,
+          url: true,
+          key: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+      console.log("Files found:", files);
+
+      console.log("Fetching messages for workspace:", input.id);
+
+      if (!files.length) {
+        return { status: "PENDING" as const };
+      }
+
+      const allUploaded = files.every(
+        (file) => file.uploadStatus === "SUCCESS"
+      );
+
+      console.log("saatus:", allUploaded);
+
+      return { status: allUploaded ? "SUCCESS" : "FAILED" };
+    }),
   deleteFile: privateProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
@@ -156,6 +236,33 @@ export const appRouter = router({
       });
 
       return file;
+    }),
+  deleteWorkspace: privateProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+
+      const workspace = await db.workspace.findFirst({
+        where: {
+          id: input.id,
+          userId,
+        },
+      });
+
+      if (!workspace) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workspace not found",
+        });
+      }
+
+      await db.workspace.delete({
+        where: {
+          id: input.id,
+        },
+      });
+
+      return workspace;
     }),
 });
 

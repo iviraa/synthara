@@ -20,11 +20,11 @@ export const ChatContext = createContext<StreamResponse>({
 });
 
 interface Props {
-  fileId: string;
+  workspaceId: string;
   children: ReactNode;
 }
 
-export const ChatContextProvider = ({ fileId, children }: Props) => {
+export const ChatContextProvider = ({ workspaceId, children }: Props) => {
   const [message, setMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -39,7 +39,7 @@ export const ChatContextProvider = ({ fileId, children }: Props) => {
       const response = await fetch("/api/message", {
         method: "POST",
         body: JSON.stringify({
-          fileId,
+          workspaceId,
           message,
         }),
       });
@@ -55,14 +55,14 @@ export const ChatContextProvider = ({ fileId, children }: Props) => {
       setMessage("");
 
       // step 1
-      await utils.getFileMessages.cancel();
+      await utils.getWorkspaceMessages.cancel();
 
       // step 2
-      const previousMessages = utils.getFileMessages.getInfiniteData();
+      const previousMessages = utils.getWorkspaceMessages.getInfiniteData();
 
       // step 3
-      utils.getFileMessages.setInfiniteData(
-        { fileId, limit: INFINITE_QUERY_LIMIT },
+      utils.getWorkspaceMessages.setInfiniteData(
+        { workspaceId, limit: INFINITE_QUERY_LIMIT },
         (old) => {
           if (!old) {
             return {
@@ -127,8 +127,8 @@ export const ChatContextProvider = ({ fileId, children }: Props) => {
         accResponse += chunkValue;
 
         // append chunk to the actual message
-        utils.getFileMessages.setInfiniteData(
-          { fileId, limit: INFINITE_QUERY_LIMIT },
+        utils.getWorkspaceMessages.setInfiniteData(
+          { workspaceId, limit: INFINITE_QUERY_LIMIT },
           (old) => {
             if (!old) return { pages: [], pageParams: [] };
 
@@ -179,15 +179,15 @@ export const ChatContextProvider = ({ fileId, children }: Props) => {
 
     onError: (_, __, context) => {
       setMessage(backupMessage.current);
-      utils.getFileMessages.setData(
-        { fileId },
+      utils.getWorkspaceMessages.setData(
+        { workspaceId },
         { messages: context?.previousMessages ?? [] }
       );
     },
     onSettled: async () => {
       setIsLoading(false);
 
-      await utils.getFileMessages.invalidate({ fileId });
+      await utils.getWorkspaceMessages.invalidate({ workspaceId });
     },
   });
 

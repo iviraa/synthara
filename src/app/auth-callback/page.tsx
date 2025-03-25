@@ -1,19 +1,19 @@
 "use client";
 
+import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { trpc } from "../_trpc/client";
 import { Loader2 } from "lucide-react";
 
-const Page = () => {
+function AuthCallbackContent() {
   const router = useRouter();
-
   const searchParams = useSearchParams();
   const origin = searchParams.get("origin");
 
   const { data, isSuccess } = trpc.authCallback.useQuery();
 
   if (isSuccess && data.success) {
-    router.push(origin ? `/${origin}` : "/dashboard");
+    router.push(origin ? `/${origin}` : "/workspace");
   }
 
   return (
@@ -25,6 +25,12 @@ const Page = () => {
       </div>
     </div>
   );
-};
+}
 
-export default Page;
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthCallbackContent />
+    </Suspense>
+  );
+}

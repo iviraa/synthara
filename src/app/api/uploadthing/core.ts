@@ -5,6 +5,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { pinecone } from "@/lib/pinecone";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
+import { z } from "zod";
 
 const f = createUploadthing();
 
@@ -21,7 +22,8 @@ export const ourFileRouter = {
       maxFileCount: 1,
     },
   })
-    .middleware(async ({ req }) => {
+    .input(z.object({ workspaceId: z.string().optional() }))
+    .middleware(async ({ req, input }) => {
       const { getUser } = getKindeServerSession();
       const user = getUser();
       const id = (await user).id;
@@ -29,7 +31,7 @@ export const ourFileRouter = {
       if (!(await user).id || !(await user).email)
         throw new Error("UNAUTHORIZED");
 
-      return { userId: id };
+      return { userId: id, workspaceId: input.workspaceId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const createdFile = await db.file.create({
@@ -39,6 +41,7 @@ export const ourFileRouter = {
           userId: metadata.userId,
           url: file.url,
           uploadStatus: "PROCESSING",
+          workspaceId: metadata.workspaceId,
         },
       });
 
@@ -51,7 +54,6 @@ export const ourFileRouter = {
 
         const pageLevelDocs = await loader.load();
 
-     
         const pineconeIndex = pinecone.Index("synthara");
 
         const embeddings = new OpenAIEmbeddings({
@@ -72,7 +74,6 @@ export const ourFileRouter = {
             uploadStatus: "SUCCESS",
           },
         });
-
       } catch (error) {
         await db.file.update({
           where: {
@@ -82,6 +83,40 @@ export const ourFileRouter = {
             uploadStatus: "FAILED",
           },
         });
+      }
+    }),
+  imageUploader: f({
+    image: {
+      maxFileSize: "4MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(async ({ req }) => {
+      const { getUser } = getKindeServerSession();
+      const user = await getUser();
+      if (!user?.id) throw new Error("UNAUTHORIZED");
+
+      return { userId: user.id };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      try {
+        const workspace = await db.workspace.findFirst({
+          where: { userId: metadata.userId },
+          select: { id: true },
+        });
+
+        if (!workspace) throw new Error("Workspace not found for this user");
+
+        await db.workspace.update({
+          where: {
+            id: workspace.id,
+          },
+          data: {
+            imageUrl: file.url,
+          },
+        });
+      } catch (error) {
+        console.error("Image upload failed:", error);
       }
     }),
 } satisfies FileRouter;

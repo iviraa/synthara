@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 import { Button } from "./ui/button";
+import { Upload } from "lucide-react";
 
 import Dropzone from "react-dropzone";
 import { Cloud, File, Loader2 } from "lucide-react";
@@ -13,7 +20,13 @@ import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
-const UploadDropzone = () => {
+const UploadDropzone = ({
+  onUploadComplete,
+  workspaceId,
+}: {
+  onUploadComplete: () => void;
+  workspaceId: string;
+}) => {
   const router = useRouter();
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -24,10 +37,24 @@ const UploadDropzone = () => {
 
   const { mutate: startPolling } = trpc.getFile.useMutation({
     onSuccess: (file) => {
-      router.push(`/dashboard/${file.id}`);
+      if (file.uploadStatus === "SUCCESS") {
+        onUploadComplete();
+        window.location.reload();
+      } else if (file.uploadStatus === "FAILED") {
+        toast({
+          title: "Upload failed",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      } else {
+        // If still processing, retry after a delay
+        setTimeout(() => {
+          startPolling({ key: file.key });
+        }, 1000);
+      }
     },
     retry: true,
-    retryDelay: 500,
+    retryDelay: 1000,
   });
 
   const startSimulatedProgress = () => {
@@ -55,7 +82,9 @@ const UploadDropzone = () => {
         const progressInterval = startSimulatedProgress();
 
         // handle file uploading
-        const res = await startUpload(acceptedFile);
+        const res = await startUpload(acceptedFile, {
+          workspaceId,
+        });
 
         if (!res) {
           return toast({
@@ -142,7 +171,11 @@ const UploadDropzone = () => {
   );
 };
 
-const UploadButton = () => {
+interface UploadButtonProps {
+  workspaceId: string;
+}
+
+const UploadButton = ({ workspaceId }: UploadButtonProps) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
@@ -155,11 +188,23 @@ const UploadButton = () => {
       }}
     >
       <DialogTrigger onClick={() => setIsOpen(true)} asChild>
-        <Button>Upload PDF</Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full bg-zinc-50 hover:bg-zinc-200 border-zinc-300 shadow-lg hover:shadow-xl transition-all duration-200 hover:border-zinc-400"
+        >
+          <Upload className="h-5 w-5 text-zinc-600" />
+        </Button>
       </DialogTrigger>
 
       <DialogContent>
-        <UploadDropzone />
+        <DialogHeader>
+          <DialogTitle>Upload PDF</DialogTitle>
+        </DialogHeader>
+        <UploadDropzone
+          onUploadComplete={() => setIsOpen(false)}
+          workspaceId={workspaceId}
+        />
       </DialogContent>
     </Dialog>
   );

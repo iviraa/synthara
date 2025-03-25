@@ -22,20 +22,24 @@ export const POST = async (req: NextRequest) => {
 
   if (!userId) return new Response("Unauthorized", { status: 401 });
 
-  const { fileId, message } = SendMessageValidator.parse(body);
+  const { message, workspaceId } = SendMessageValidator.parse(body);
 
-  const file = await db.file.findFirst({
+  const workspaceFiles = await db.file.findMany({
     where: {
-      id: fileId,
+      workspaceId,
       userId,
     },
+    select: { id: true },
   });
 
-  if (!file) return new Response("File not found", { status: 404 });
+  if (!workspaceFiles.length)
+    return new Response("Files not found", { status: 404 });
+
+  const fileIds = workspaceFiles.map((file) => file.id);
 
   await db.message.create({
     data: {
-      fileId,
+      workspaceId,
       text: message,
       isUserMessage: true,
       userId,
@@ -48,17 +52,23 @@ export const POST = async (req: NextRequest) => {
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
-  const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-    //@ts-ignore
-    pineconeIndex,
-    namespace: file.id,
-  });
 
-  const results = await vectorStore.similaritySearch(message, 4);
+  let allContexts: string[] = [];
+
+  for (const fileId of fileIds) {
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+      //@ts-ignore
+      pineconeIndex,
+      namespace: fileId, // Using fileId as namespace for each file
+    });
+
+    const results = await vectorStore.similaritySearch(message, 4);
+    allContexts.push(...results.map((r) => r.pageContent));
+  }
 
   const prevMessages = await db.message.findMany({
     where: {
-      fileId,
+      workspaceId,
     },
     orderBy: {
       createdAt: "asc",
@@ -96,7 +106,7 @@ export const POST = async (req: NextRequest) => {
   \n----------------\n
   
   CONTEXT:
-  ${results.map((r) => r.pageContent).join("\n\n")}
+   ${allContexts.join("\n\n")}
   
   USER INPUT: ${message}`,
       },
@@ -109,7 +119,7 @@ export const POST = async (req: NextRequest) => {
         data: {
           text: completion,
           isUserMessage: false,
-          fileId,
+          workspaceId,
           userId,
         },
       });
