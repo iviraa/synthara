@@ -1,10 +1,15 @@
 import WidthWrapper from "@/components/WidthWrapper";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { LoginLink } from "@kinde-oss/kinde-auth-nextjs/server";
 
-export default function Home() {
+export default async function Home() {
+  const { isAuthenticated } = getKindeServerSession();
+  const isUserAuthenticated = await isAuthenticated();
+
   return (
     <>
       <WidthWrapper className="mb-12 mt-20 sm:mt-40 flex flex-col items-center justify-center text-center">
@@ -12,24 +17,33 @@ export default function Home() {
           <p className="text-sm font-semibold text-gray-700">Use synthara.ai</p>
         </div>
         <h1 className="max-w-5xl text-5xl font-bold sm:text-6xl lg:text-7xl">
-          Let your <span className="text-[#8D6C9F]">research</span> talk to
-          you.
+          Let your <span className="text-[#8D6C9F]">research</span> talk to you.
         </h1>
         <p className="mt-5 max-w-prose sm:text-lg text-zinc-700">
           Beyond search. Beyond summaries. Synthara synthesizes research,
           expands perspectives, and unlocks the depths of discovery.
         </p>
 
-        <Link
-          className={buttonVariants({
-            size: "lg",
-            className: "mt-10 ",
-          })}
-          href="/dashboard"
-          target="_blank"
-        >
-          Get started <ArrowRight className="ml-2 h-5 w-5" />
-        </Link>
+        {isUserAuthenticated ? (
+          <Link
+            className={buttonVariants({
+              size: "lg",
+              className: "mt-10",
+            })}
+            href="/workspace"
+          >
+            Get started <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+        ) : (
+          <LoginLink
+            className={buttonVariants({
+              size: "lg",
+              className: "mt-10",
+            })}
+          >
+            Get started <ArrowRight className="ml-2 h-5 w-5" />
+          </LoginLink>
+        )}
       </WidthWrapper>
       <div>
         <div className="relative isolate">
@@ -93,9 +107,7 @@ export default function Home() {
         <ol className="my-8 space-y-4 pt-8 md:flex md:space-x-12 md:space-y-0">
           <li className="md:flex-1">
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-top-2 md:pb-0 md:pl-0 md:pt-4">
-              <span className="text-sm font-bold text-[#8D6C9F]">
-                Step 1
-              </span>
+              <span className="text-sm font-bold text-[#8D6C9F]">Step 1</span>
               <span className="text-xl font-semibold">
                 Sign up for an account
               </span>
@@ -112,9 +124,7 @@ export default function Home() {
           </li>
           <li className="md:flex-1">
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-top-2 md:pb-0 md:pl-0 md:pt-4">
-              <span className="text-sm font-bold text-[#8D6C9F]">
-                Step 2
-              </span>
+              <span className="text-sm font-bold text-[#8D6C9F]">Step 2</span>
               <span className="text-xl font-semibold">
                 Upload your documents.
               </span>
@@ -126,16 +136,14 @@ export default function Home() {
           </li>
           <li className="md:flex-1">
             <div className="flex flex-col space-y-2 border-l-4 border-zinc-300 py-2 pl-4 md:border-l-0 md:border-top-2 md:pb-0 md:pl-0 md:pt-4">
-              <span className="text-sm font-bold text-[#8D6C9F]">
-                Step 3
-              </span>
+              <span className="text-sm font-bold text-[#8D6C9F]">Step 3</span>
               <span className="text-xl font-semibold">
                 Start asking questions
               </span>
               <span className="mt-2 text-zinc-700">
                 It&apos;s that simple. Try out{" "}
-                <span className="font-bold text-[#8D6C9F]">Synthara</span>{" "}
-                today - it really takes you less than a minute.
+                <span className="font-bold text-[#8D6C9F]">Synthara</span> today
+                - it really takes you less than a minute.
               </span>
             </div>
           </li>

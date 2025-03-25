@@ -5,6 +5,7 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { pinecone } from "@/lib/pinecone";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { PineconeStore } from "@langchain/pinecone";
+import { z } from "zod";
 
 const f = createUploadthing();
 
@@ -21,7 +22,8 @@ export const ourFileRouter = {
       maxFileCount: 1,
     },
   })
-    .middleware(async ({ req }) => {
+    .input(z.object({ workspaceId: z.string().optional() }))
+    .middleware(async ({ req, input }) => {
       const { getUser } = getKindeServerSession();
       const user = getUser();
       const id = (await user).id;
@@ -29,7 +31,7 @@ export const ourFileRouter = {
       if (!(await user).id || !(await user).email)
         throw new Error("UNAUTHORIZED");
 
-      return { userId: id };
+      return { userId: id, workspaceId: input.workspaceId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const createdFile = await db.file.create({
@@ -39,6 +41,7 @@ export const ourFileRouter = {
           userId: metadata.userId,
           url: file.url,
           uploadStatus: "PROCESSING",
+          workspaceId: metadata.workspaceId,
         },
       });
 

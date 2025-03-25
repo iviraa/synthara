@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ImageIcon,
   ImageUpIcon,
+  Trash2,
 } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { Button } from "./ui/button";
@@ -39,6 +40,11 @@ const WorkspaceComponent = () => {
   const [sortBy, setSortBy] = useState<string>("name");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [newWorkspaceImageUrl, setNewWorkspaceImageUrl] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(
+    null
+  );
 
   const utils = trpc.useContext();
   const { toast } = useToast();
@@ -58,6 +64,7 @@ const WorkspaceComponent = () => {
         setWorkspaces((prev) => [...prev, newWorkspace]);
         setIsDialogOpen(false);
         setNewWorkspaceName("");
+        setNewWorkspaceImageUrl("");
         toast({
           title: "Workspace created!",
           description: "Your new workspace is ready.",
@@ -72,6 +79,39 @@ const WorkspaceComponent = () => {
         });
       },
     });
+
+  const { mutate: deleteWorkspace, isPending: isDeleting } =
+    trpc.deleteWorkspace.useMutation({
+      onSuccess: () => {
+        setWorkspaces((prev) =>
+          prev.filter((workspace) => workspace.id !== workspaceToDelete)
+        );
+        setIsDeleteDialogOpen(false);
+        setWorkspaceToDelete(null);
+        toast({
+          title: "Workspace deleted",
+          description: "The workspace has been deleted successfully.",
+        });
+      },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Could not delete workspace.",
+          variant: "destructive",
+        });
+      },
+    });
+
+  const handleDeleteClick = (workspaceId: string) => {
+    setWorkspaceToDelete(workspaceId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (workspaceToDelete) {
+      deleteWorkspace({ id: workspaceToDelete });
+    }
+  };
 
   const filteredAndSortedWorkspaces = workspaces
     .filter((workspace) =>
@@ -122,26 +162,40 @@ const WorkspaceComponent = () => {
       {workspaces.length ? (
         <div className="grid grid-cols-2 px-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 md:gap-10">
           {/* Create New Workspace Button */}
-          <div className="aspect-[3/4] text-zinc-400 hover:text-zinc-600 transition-colors ">
+          <div className="aspect-[3/4] text-zinc-400 hover:text-zinc-600 transition-colors">
             <button
-              className="w-full h-full rounded-xl border-2 border-dashed flex flex-col items-center justify-center my-2 border-zinc-300 hover:border-gray-600 transition-colors hover:bg-gray-50"
+              className="w-full h-full rounded-xl border-2 border-dashed flex flex-col items-center justify-center border-zinc-300 hover:border-gray-600 transition-colors hover:bg-gray-50"
               onClick={() => setIsDialogOpen(true)}
             >
-              <Plus className="h-16 w-16 mb-4" />
+              <Plus className="h-16 w-16" />
             </button>
-            <div className="mx-auto mt-4 font-semibold text-lg text-center">
+            <h3 className="mt-4 font-semibold text-lg text-center text-gray-800">
               New
-            </div>
+            </h3>
+            <p className="text-sm text-gray-600 mt-1 invisible">Placeholder</p>
           </div>
 
           {/* Render Workspaces */}
           {filteredAndSortedWorkspaces.map((workspace) => (
             <motion.div
               key={workspace.id}
-              className="group flex flex-col items-center cursor-pointer"
+              className="group flex flex-col items-center cursor-pointer relative"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
             >
+              <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full bg-white/80 hover:bg-red-100 hover:text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(workspace.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
               {workspace.imageUrl ? (
                 <div className="relative aspect-[3/4] w-full rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
                   <Link href={`/workspace/${workspace.id}`}>
@@ -175,42 +229,106 @@ const WorkspaceComponent = () => {
       ) : isLoading ? (
         <Skeleton height={100} count={3} className="my-2" />
       ) : (
-        <div className="mt-16 flex flex-col items-center gap-2">
+        <div className="mt-16 flex flex-col items-center gap-4">
           <Ghost className="h-8 w-8 text-zinc-800" />
           <h3 className="font-semibold text-xl">Pretty empty around here</h3>
-          <p>Let&apos;s start your first research.</p>
+          <p className="text-sm text-gray-500">
+            Let&apos;s start your first research.
+          </p>
+          <Button onClick={() => setIsDialogOpen(true)}>Start</Button>
         </div>
       )}
 
       {/* Dialog for Creating a Workspace */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="p-6 rounded-lg shadow-lg max-w-sm">
-          <DialogHeader className="text-center">
-            <DialogTitle className=" font-semibold">
-              Create a new Workspace
-            </DialogTitle>
+          <DialogHeader>
+            <DialogTitle>Create a new Workspace</DialogTitle>
           </DialogHeader>
 
-          <Input
-            type="text"
-            placeholder="Workspace name..."
-            value={newWorkspaceName}
-            onChange={(e) => setNewWorkspaceName(e.target.value)}
-            className="w-full mt-2 px-2 py-2 text-sm border rounded-md focus:ring-2 focus:ring-primary transition-all"
-          />
+          <div className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Workspace Name
+              </label>
+              <Input
+                type="text"
+                placeholder="Enter workspace name..."
+                value={newWorkspaceName}
+                onChange={(e) => setNewWorkspaceName(e.target.value)}
+                className="w-full mt-1"
+              />
+            </div>
 
-          <DialogFooter className="flex justify-between mt-2">
+            <div>
+              <label className="text-sm font-medium text-gray-700">
+                Image URL
+              </label>
+              <Input
+                type="url"
+                placeholder="Enter image URL..."
+                value={newWorkspaceImageUrl}
+                onChange={(e) => setNewWorkspaceImageUrl(e.target.value)}
+                className="w-full mt-1"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex justify-between mt-6">
             <Button variant="ghost" onClick={() => setIsDialogOpen(false)}>
               Cancel
             </Button>
             <Button
-              onClick={() => createWorkspace({ name: newWorkspaceName })}
-              disabled={!newWorkspaceName.trim() || isCreating}
+              onClick={() =>
+                createWorkspace({
+                  name: newWorkspaceName,
+                  imageUrl: newWorkspaceImageUrl,
+                })
+              }
+              disabled={
+                !newWorkspaceName.trim() ||
+                !newWorkspaceImageUrl.trim() ||
+                isCreating
+              }
             >
               {isCreating ? (
                 <Loader2 className="animate-spin h-4 w-4" />
               ) : (
                 "Create"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="p-6 rounded-lg shadow-lg max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Workspace</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-gray-600 mt-2">
+            Are you sure you want to delete this workspace? This action cannot
+            be undone.
+          </p>
+
+          <DialogFooter className="flex justify-between mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2 className="animate-spin h-4 w-4" />
+              ) : (
+                "Delete"
               )}
             </Button>
           </DialogFooter>

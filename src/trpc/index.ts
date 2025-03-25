@@ -45,13 +45,22 @@ export const appRouter = router({
     });
   }),
   getUserFiles: privateProcedure.query(async ({ ctx }) => {
-    const { userId, user } = ctx;
+    const { userId } = ctx;
 
-    return await db.file.findMany({
+    const workspaces = await db.workspace.findMany({
       where: {
         userId,
       },
+      include: {
+        File: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
     });
+
+    return workspaces;
   }),
   getFile: privateProcedure
     .input(z.object({ key: z.string() }))
@@ -78,6 +87,7 @@ export const appRouter = router({
     .input(
       z.object({
         name: z.string().min(1, "Workspace name is required"),
+        imageUrl: z.string().url("Please provide a valid image URL"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -93,6 +103,7 @@ export const appRouter = router({
       const workspace = await db.workspace.create({
         data: {
           name: input.name,
+          imageUrl: input.imageUrl,
           userId,
         },
       });
@@ -225,6 +236,33 @@ export const appRouter = router({
       });
 
       return file;
+    }),
+  deleteWorkspace: privateProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+
+      const workspace = await db.workspace.findFirst({
+        where: {
+          id: input.id,
+          userId,
+        },
+      });
+
+      if (!workspace) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Workspace not found",
+        });
+      }
+
+      await db.workspace.delete({
+        where: {
+          id: input.id,
+        },
+      });
+
+      return workspace;
     }),
 });
 

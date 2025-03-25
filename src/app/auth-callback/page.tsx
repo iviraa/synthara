@@ -13,7 +13,7 @@ const Page = () => {
   const { data, isSuccess } = trpc.authCallback.useQuery();
 
   if (isSuccess && data.success) {
-    router.push(origin ? `/${origin}` : "/dashboard");
+    router.push(origin ? `/${origin}` : "/workspace");
   }
 
   return (

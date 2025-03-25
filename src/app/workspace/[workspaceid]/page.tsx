@@ -1,6 +1,6 @@
 import ChatWrapper from "@/components/chat/ChatWrapper";
-import PdfRenderer from "@/components/PdfRenderer";
 import WorkspaceRenderer from "@/components/WorkspaceRenderer";
+import UploadButton from "@/components/UploadButton";
 import { db } from "@/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { notFound, redirect } from "next/navigation";
@@ -51,6 +51,11 @@ const Page = async ({ params }: PageProps) => {
         <div className="shrink-0 flex-[0.75] border-t border-gray-200 lg:w-96 lg:border-l lg:border-t-0">
           <ChatWrapper workspaceId={workspaceid} />
         </div>
+      </div>
+
+      {/* Floating Upload Button */}
+      <div className="fixed top-[calc(3.5rem+1rem)] right-4 z-50">
+        <UploadButton workspaceId={workspaceid} />
       </div>
     </div>
   );

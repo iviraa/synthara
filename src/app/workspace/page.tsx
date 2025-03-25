@@ -1,4 +1,3 @@
-import DashboardComponent from "@/components/DashboardComponent";
 import WorkspaceComponent from "@/components/WorkspaceComponent";
 import { db } from "@/db";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";

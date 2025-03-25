@@ -52,13 +52,6 @@ export const POST = async (req: NextRequest) => {
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
-  // const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-  //   //@ts-ignore
-  //   pineconeIndex,
-  //   namespace: workspaceId,
-  // });
-
-  // const allresults = await vectorStore.similaritySearch(message, 4);
 
   let allContexts: string[] = [];
 
