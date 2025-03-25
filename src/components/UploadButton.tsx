@@ -13,7 +13,7 @@ import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
-const UploadDropzone = () => {
+const UploadDropzone = ({ workspaceId }: { workspaceId: string }) => {
   const router = useRouter();
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -23,8 +23,8 @@ const UploadDropzone = () => {
   const { startUpload } = useUploadThing("pdfUploader");
 
   const { mutate: startPolling } = trpc.getFile.useMutation({
-    onSuccess: (file) => {
-      router.push(`/dashboard/${file.id}`);
+    onSuccess: () => {
+      router.push(`/workspace/${workspaceId}`);
     },
     retry: true,
     retryDelay: 500,
@@ -55,7 +55,29 @@ const UploadDropzone = () => {
         const progressInterval = startSimulatedProgress();
 
         // handle file uploading
-        const res = await startUpload(acceptedFile);
+        const res = await startUpload(acceptedFile, {
+          onUploadBegin: () => {
+            console.log("Upload started");
+          },
+          onUploadProgress: (progress: number) => {
+            console.log("Upload progress:", progress);
+          },
+          onUploadComplete: (res: { key: string; url: string }[]) => {
+            console.log("Upload completed:", res);
+          },
+          onUploadError: (error: Error) => {
+            console.error("Upload error:", error);
+          },
+          onBeforeUploadBegin: (files: File[]) => {
+            console.log("Before upload:", files);
+          },
+          onClientUploadComplete: (res: { key: string; url: string }[]) => {
+            console.log("Client upload complete:", res);
+          },
+          onClientUploadError: (error: Error) => {
+            console.error("Client upload error:", error);
+          },
+        });
 
         if (!res) {
           return toast({
@@ -142,7 +164,7 @@ const UploadDropzone = () => {
   );
 };
 
-const UploadButton = () => {
+const UploadButton = ({ workspaceId }: { workspaceId: string }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
@@ -159,7 +181,7 @@ const UploadButton = () => {
       </DialogTrigger>
 
       <DialogContent>
-        <UploadDropzone />
+        <UploadDropzone workspaceId={workspaceId} />
       </DialogContent>
     </Dialog>
   );

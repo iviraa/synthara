@@ -74,6 +74,31 @@ export const appRouter = router({
 
       return file;
     }),
+  createWorkspace: privateProcedure
+    .input(
+      z.object({
+        name: z.string().min(1, "Workspace name is required"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "User not authenticated",
+        });
+      }
+
+      const workspace = await db.workspace.create({
+        data: {
+          name: input.name,
+          userId,
+        },
+      });
+
+      return workspace;
+    }),
   getWorkspaceMessages: privateProcedure
     .input(
       z.object({
@@ -161,8 +186,6 @@ export const appRouter = router({
       console.log("Files found:", files);
 
       console.log("Fetching messages for workspace:", input.id);
-
-
 
       if (!files.length) {
         return { status: "PENDING" as const };

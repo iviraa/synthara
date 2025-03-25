@@ -29,7 +29,15 @@ export const ourFileRouter = {
       if (!(await user).id || !(await user).email)
         throw new Error("UNAUTHORIZED");
 
-      return { userId: id };
+      // Get workspaceId from query parameters
+      const url = new URL(req.url);
+      const workspaceId = url.searchParams.get("workspaceId");
+
+      if (!workspaceId) {
+        throw new Error("Workspace ID is required");
+      }
+
+      return { userId: id, workspaceId };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const createdFile = await db.file.create({
@@ -39,6 +47,7 @@ export const ourFileRouter = {
           userId: metadata.userId,
           url: file.url,
           uploadStatus: "PROCESSING",
+          workspaceId: metadata.workspaceId,
         },
       });
 
@@ -99,15 +108,18 @@ export const ourFileRouter = {
       try {
         const workspace = await db.workspace.findFirst({
           where: { userId: metadata.userId },
+          select: { id: true },
         });
 
         if (!workspace) throw new Error("Workspace not found for this user");
 
         await db.workspace.update({
-          where: { 
-            id: workspace.id },
-          data: { 
-            imageUrl: file.url },
+          where: {
+            id: workspace.id,
+          },
+          data: {
+            imageUrl: file.url,
+          },
         });
       } catch (error) {
         console.error("Image upload failed:", error);
