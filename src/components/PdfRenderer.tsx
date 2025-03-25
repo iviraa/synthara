@@ -40,7 +40,6 @@ interface PdfRendererProps {
 }
 
 const PdfRenderer = ({ url }: PdfRendererProps) => {
-
   const { toast } = useToast();
 
   const [numPages, setNumPages] = useState<number>();
@@ -65,13 +64,9 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
     formState: { errors },
     setValue,
   } = useForm<TCustomPageValidator>({
-    defaultValues: {
-      page: "1",
-    },
+    defaultValues: { page: "1" },
     resolver: zodResolver(CustomPageValidator),
   });
-
-  console.log(errors);
 
   const { width, ref } = useResizeDetector();
 
@@ -81,9 +76,9 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
   };
 
   return (
-    <div className="w-full bg-white rounded-md shadow flex flex-col items-center">
-      <div className="h-14 w-full border-b border-zinc-200 flex items-center justify-between px-2">
-        <div className="flex items-center gap-1.5">
+    <div className="flex h-full w-full min-h-0 flex-col items-center">
+      <div className="flex h-12 w-full items-center justify-between border-b border-ink-black/[0.06] px-3">
+        <div className="flex items-center gap-1">
           <Button
             disabled={currPage <= 1}
             onClick={() => {
@@ -91,17 +86,19 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
               setValue("page", String(currPage - 1));
             }}
             variant="ghost"
-            aria-label="previous page"
+            size="icon"
+            aria-label="Previous page"
+            className="text-graphite hover:text-ink-black"
           >
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="size-4" strokeWidth={1.5} />
           </Button>
 
           <div className="flex items-center gap-1.5">
             <Input
               {...register("page")}
               className={cn(
-                "w-12 h-8",
-                errors.page && "focus-visible:ring-red-500"
+                "h-8 w-12 rounded-lg border-ink-black/10 bg-canvas text-center text-body-sm focus-visible:ring-ink-black/30",
+                errors.page && "focus-visible:ring-spectrum-red"
               )}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -109,9 +106,8 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
                 }
               }}
             />
-            <p className="text-zinc-700 text-sm space-x-1">
-              <span>/</span>
-              <span>{numPages ?? "x"}</span>
+            <p className="text-body-sm text-slate">
+              <span>/</span> <span>{numPages ?? "x"}</span>
             </p>
           </div>
 
@@ -124,62 +120,66 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
               setValue("page", String(currPage + 1));
             }}
             variant="ghost"
-            aria-label="next page"
+            size="icon"
+            aria-label="Next page"
+            className="text-graphite hover:text-ink-black"
           >
-            <ChevronUp className="h-4 w-4" />
+            <ChevronUp className="size-4" strokeWidth={1.5} />
           </Button>
         </div>
 
-        <div className="space-x-2">
+        <div className="flex items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="gap-1.5" aria-label="zoom" variant="ghost">
-                <Search className="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Zoom"
+                className="gap-1.5 text-graphite hover:text-ink-black"
+              >
+                <Search className="size-4" strokeWidth={1.5} />
                 {scale * 100}%
-                <ChevronDown className="h-3 w-3 opacity-50" />
+                <ChevronDown className="size-3 opacity-50" strokeWidth={1.5} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onSelect={() => setScale(1)}>
-                100%
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setScale(1.5)}>
-                150%
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setScale(2)}>
-                200%
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setScale(2.5)}>
-                250%
-              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setScale(1)}>100%</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setScale(1.5)}>150%</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setScale(2)}>200%</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setScale(2.5)}>250%</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <Button
             onClick={() => setRotation((prev) => prev + 90)}
             variant="ghost"
-            aria-label="rotate 90 degrees"
+            size="icon"
+            aria-label="Rotate 90 degrees"
+            className="text-graphite hover:text-ink-black"
           >
-            <RotateCw className="h-4 w-4" />
+            <RotateCw className="size-4" strokeWidth={1.5} />
           </Button>
 
           <PdfFullscreen fileUrl={url} />
         </div>
       </div>
 
-      <div className="flex-1 w-full max-h-screen">
-        <SimpleBar autoHide={true} className="max-h-[calc(100vh-10rem)]">
-          <div ref={ref}>
+      <div className="w-full min-h-0 flex-1">
+        <SimpleBar autoHide={true} className="h-full">
+          <div ref={ref} className="px-4 py-4">
             <Document
               loading={
-                <div className="flex justify-center">
-                  <Loader2 className="my-24 h-6 w-6 animate-spin" />
+                <div className="flex justify-center py-20">
+                  <Loader2
+                    className="size-6 animate-spin text-graphite"
+                    strokeWidth={1.5}
+                  />
                 </div>
               }
               onLoadError={() => {
                 toast({
-                  title: "Error loading PDF",
-                  description: "Please try again later",
+                  title: "Could not load PDF",
+                  description: "Please try again later.",
                   variant: "destructive",
                 });
               }}
@@ -205,8 +205,11 @@ const PdfRenderer = ({ url }: PdfRendererProps) => {
                 rotate={rotation}
                 key={"@" + scale}
                 loading={
-                  <div className="flex justify-center">
-                    <Loader2 className="my-24 h-6 w-6 animate-spin" />
+                  <div className="flex justify-center py-20">
+                    <Loader2
+                      className="size-6 animate-spin text-graphite"
+                      strokeWidth={1.5}
+                    />
                   </div>
                 }
                 onRenderSuccess={() => setRenderedScale(scale)}

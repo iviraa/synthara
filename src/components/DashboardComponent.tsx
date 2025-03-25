@@ -1,27 +1,27 @@
 "use client";
 
 import { trpc } from "@/app/_trpc/client";
-import { Ghost, Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown, FileText, Trash2, ArrowUpRight } from "lucide-react";
 import Skeleton from "react-loading-skeleton";
 import { Button } from "./ui/button";
-import { Trash2, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { format } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import WidthWrapper from "./WidthWrapper";
 
 const DashboardComponent = () => {
-  const [deletelingFile, setDeletelingFile] = useState<string | null>(null);
+  const [deletingFile, setDeletingFile] = useState<string | null>(null);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
     null
   );
 
   const utils = trpc.useContext();
-
   const { data: workspaces, isLoading } = trpc.getUserFiles.useQuery();
 
   const { mutate: deleteFile } = trpc.deleteFile.useMutation({
@@ -29,10 +29,10 @@ const DashboardComponent = () => {
       utils.getUserFiles.invalidate();
     },
     onMutate({ id }) {
-      setDeletelingFile(id);
+      setDeletingFile(id);
     },
     onSettled() {
-      setDeletelingFile(null);
+      setDeletingFile(null);
     },
   });
 
@@ -40,115 +40,158 @@ const DashboardComponent = () => {
     ? workspaces?.find((w) => w.id === selectedWorkspaceId)
     : null;
 
-  // Get all files when no workspace is selected, otherwise get files from selected workspace
   const files = selectedWorkspaceId
     ? selectedWorkspace?.File || []
     : workspaces
-        ?.flatMap((workspace) => workspace.File)
+        ?.flatMap((workspace) =>
+          workspace.File.map((file) => ({ ...file, workspaceName: workspace.name }))
+        )
         .sort(
           (a, b) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         ) || [];
 
   return (
-    <div className="mx-auto max-w-7xl md:p-10">
-      <div className="mt-8 flex flex-col items-start justify-between gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-center sm:gap-0">
-        <h1 className="mb-3 font-bold text-5xl text-gray-900">My Files</h1>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="flex gap-2">
-              {selectedWorkspace?.name || "All Workspaces"}
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[200px]">
-            <DropdownMenuItem
-              onClick={() => setSelectedWorkspaceId(null)}
-              className="cursor-pointer hover:bg-zinc-800 hover:text-white"
-            >
-              All Workspaces
-            </DropdownMenuItem>
-            {workspaces?.map((workspace) => (
-              <DropdownMenuItem
-                key={workspace.id}
-                onClick={() => setSelectedWorkspaceId(workspace.id)}
-                className="cursor-pointer hover:bg-zinc-800 hover:text-white"
-              >
-                {workspace.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {isLoading ? (
-        <Skeleton height={100} count={3} className="my-2" />
-      ) : files.length > 0 ? (
-        <ul className="mt-8 space-y-2">
-          {files.map((file) => (
-            <li
-              key={file.id}
-              className="flex items-center justify-between p-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
-            >
-              <div className="flex items-center w-[40%]">
-                <span className="font-medium truncate">{file.name}</span>
-              </div>
-              {!selectedWorkspaceId && (
-                <div className="w-[30%] text-center px-4">
-                  <span className="text-sm text-zinc-500">
-                    {
-                      workspaces?.find((w) =>
-                        w.File.some((f) => f.id === file.id)
-                      )?.name
-                    }
-                  </span>
-                </div>
-              )}
-              <div className="flex items-center justify-end w-[30%] space-x-2">
-                <span className="text-sm text-gray-500 whitespace-nowrap">
-                  {new Date(file.createdAt).toLocaleDateString()}
-                </span>
-                <Button
-                  variant="ghost"
-                  onClick={() => deleteFile({ id: file.id })}
-                  size="icon"
-                  className="text-red-500 hover:text-red-700 hover:bg-red-100"
-                >
-                  {deletelingFile === file.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
+    <main className="min-h-screen bg-canvas pb-24 pt-12">
+      <WidthWrapper>
+        <header className="flex flex-col gap-6 pb-10">
+          <p className="text-caption uppercase tracking-[0.18em] text-slate">
+            Library
+          </p>
+          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+            <h1 className="max-w-[18ch] text-[40px] font-light leading-[1.05] tracking-[-0.04em] text-ink-black sm:text-heading">
+              Every paper you have asked about,
+              <br />
+              in one shelf.
+            </h1>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  {selectedWorkspace?.name || "All workspaces"}
+                  <ChevronDown className="size-4" strokeWidth={1.5} />
                 </Button>
-                <Link
-                  href={`/workspace/${file.workspaceId}`}
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Preview ${file.name}`}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[220px]">
+                <DropdownMenuItem onClick={() => setSelectedWorkspaceId(null)}>
+                  All workspaces
+                </DropdownMenuItem>
+                {workspaces?.map((workspace) => (
+                  <DropdownMenuItem
+                    key={workspace.id}
+                    onClick={() => setSelectedWorkspaceId(workspace.id)}
                   >
-                    <ExternalLink className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="mt-16 flex flex-col items-center gap-2">
-          <Ghost className="h-8 w-8 text-zinc-800" />
-          <h3 className="font-semibold text-xl">
-            {selectedWorkspaceId
-              ? "No files in this workspace"
-              : "No files found"}
-          </h3>
-          <p>Upload a PDF to get started.</p>
-        </div>
-      )}
-    </div>
+                    {workspace.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+
+        {isLoading ? (
+          <div className="flex flex-col gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} height={72} borderRadius={20} />
+            ))}
+          </div>
+        ) : files.length > 0 ? (
+          <ul className="frost-card divide-y divide-ink-black/[0.06] overflow-hidden p-0">
+            {files.map((file) => {
+              const workspaceName =
+                "workspaceName" in file
+                  ? (file as typeof file & { workspaceName?: string })
+                      .workspaceName
+                  : workspaces?.find((w) =>
+                      w.File.some((f) => f.id === file.id)
+                    )?.name;
+
+              return (
+                <li
+                  key={file.id}
+                  className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-6 py-4 transition-colors duration-200 hover:bg-ink-black/[0.02] sm:grid-cols-[auto_1fr_auto_auto_auto]"
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ink-black/[0.04]">
+                    <FileText
+                      className="size-4 text-ink-black"
+                      strokeWidth={1.5}
+                    />
+                  </span>
+
+                  <div className="min-w-0">
+                    <p className="truncate text-body font-medium text-ink-black">
+                      {file.name}
+                    </p>
+                    <p className="text-caption text-slate sm:hidden">
+                      {workspaceName}
+                    </p>
+                  </div>
+
+                  <p className="hidden text-body-sm text-graphite sm:block">
+                    {workspaceName}
+                  </p>
+
+                  <p className="hidden text-body-sm text-slate sm:block">
+                    {format(new Date(file.createdAt), "MMM d, yyyy")}
+                  </p>
+
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => deleteFile({ id: file.id })}
+                      aria-label={`Delete ${file.name}`}
+                      className="text-graphite hover:text-spectrum-red"
+                    >
+                      {deletingFile === file.id ? (
+                        <Loader2 className="size-4 animate-spin" strokeWidth={1.5} />
+                      ) : (
+                        <Trash2 className="size-4" strokeWidth={1.5} />
+                      )}
+                    </Button>
+                    <Link
+                      href={`/workspace/${file.workspaceId}`}
+                      aria-label={`Open ${file.name}`}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-graphite hover:text-ink-black"
+                      >
+                        <ArrowUpRight
+                          className="size-4"
+                          strokeWidth={1.5}
+                        />
+                      </Button>
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <div className="frost-card mx-auto flex max-w-2xl flex-col items-center gap-4 px-12 py-20 text-center">
+            <span
+              aria-hidden
+              className="block size-8 rotate-45 rounded-[3px] bg-spectrum opacity-90"
+            />
+            <h3 className="text-heading-sm font-medium text-ink-black">
+              {selectedWorkspaceId
+                ? "Nothing in this workspace yet"
+                : "Your library is empty"}
+            </h3>
+            <p className="max-w-[36ch] text-body text-graphite">
+              Open a workspace and drop in a PDF to start your first
+              conversation.
+            </p>
+            <Link href="/workspace">
+              <Button size="lg" className="mt-2">
+                Go to workspaces
+              </Button>
+            </Link>
+          </div>
+        )}
+      </WidthWrapper>
+    </main>
   );
 };
 

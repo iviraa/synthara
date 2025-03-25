@@ -7,9 +7,9 @@ import { notFound, redirect } from "next/navigation";
 import React from "react";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     workspaceid: string;
-  };
+  }>;
 }
 
 const Page = async ({ params }: PageProps) => {
@@ -18,7 +18,7 @@ const Page = async ({ params }: PageProps) => {
   const { getUser } = getKindeServerSession();
   const user = getUser();
 
-  const userId = (await user).id;
+  const userId = (await user)?.id;
 
   if (!(await user) || !(await user).email)
     redirect(`/auth-callback/?origin=workspace/${workspaceid}`);
@@ -38,24 +38,28 @@ const Page = async ({ params }: PageProps) => {
   const fileUrls = workspace.File.map((file) => file.url);
 
   return (
-    <div className="flex-1 justify-between flex flex-col h-[calc(100vh-3.5rem)]">
-      <div className="mx-auto w-full max-w-8xl grow lg:flex xl:px-2">
-        {/* Left sidebar & main wrapper */}
-        <div className="flex-1 xl:flex">
-          <div className="px-4 py-6 sm:px-6 lg:pl-8 xl:flex-1 xl:pl-6">
-            {/* Main area */}
+    <div className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden bg-canvas">
+      <div className="mx-auto flex w-full min-h-0 max-w-8xl flex-1 flex-col lg:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col px-4 py-6 sm:px-6 lg:pl-8 lg:pr-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-caption uppercase tracking-[0.18em] text-slate">
+                Workspace
+              </p>
+              <h1 className="mt-1 text-heading-sm font-medium text-ink-black">
+                {workspace.name}
+              </h1>
+            </div>
+            <UploadButton workspaceId={workspaceid} />
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col">
             <WorkspaceRenderer urlString={fileUrls} />
           </div>
         </div>
 
-        <div className="shrink-0 flex-[0.75] border-t border-gray-200 lg:w-96 lg:border-l lg:border-t-0">
+        <aside className="flex min-h-0 shrink-0 flex-col border-t border-ink-black/[0.06] lg:h-full lg:w-[420px] lg:border-l lg:border-t-0">
           <ChatWrapper workspaceId={workspaceid} />
-        </div>
-      </div>
-
-      {/* Floating Upload Button */}
-      <div className="fixed top-[calc(3.5rem+1rem)] right-4 z-50">
-        <UploadButton workspaceId={workspaceid} />
+        </aside>
       </div>
     </div>
   );
