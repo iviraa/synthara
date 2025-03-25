@@ -7,72 +7,86 @@ import {
   LogoutLink,
   RegisterLink,
 } from "@kinde-oss/kinde-auth-nextjs/server";
+import { cn } from "@/lib/utils";
 
 const Navbar = async () => {
   const { isAuthenticated } = getKindeServerSession();
   const isUserAuthenticated = await isAuthenticated();
 
   return (
-    <nav className="sticky h-14 inset-x-0 top-0 z-30 w-full border-b border-gray-200 bg-white/75 backdrop-blur-lg transition-all">
+    <nav className="frost-header sticky inset-x-0 top-0 z-30 w-full">
       <WidthWrapper>
-        <div className="flex h-14 items-center justify-between border-b border-zinc-200">
-          <Link href="/" className="flex z-40 font-bold text-[#8D6C9F]  ">
-            <span>synthara</span>
+        <div className="flex h-14 items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-medium text-ink-black"
+          >
+            <span
+              aria-hidden
+              className="block size-3 rotate-45 rounded-[2px] bg-spectrum"
+            />
+            <span className="text-body-sm tracking-tight">synthara</span>
           </Link>
 
-          <div className="hidden items-center space-x-4 sm:flex">
-            <>
-              {isUserAuthenticated && (
-              <Link
-                href="/workspace"
-                className={buttonVariants({
-                  variant: "ghost",
-                  size: "sm",
-                })}
-              >
-                Workspace
-              </Link>
-            )}
-
-              {isUserAuthenticated ? (
+          <div className="hidden items-center gap-1 sm:flex">
+            {isUserAuthenticated ? (
+              <>
+                <Link
+                  href="/workspace"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "px-4"
+                  )}
+                >
+                  Workspace
+                </Link>
                 <Link
                   href="/library"
-                  className={buttonVariants({
-                    variant: "ghost",
-                    size: "sm",
-                  })}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "px-4"
+                  )}
                 >
                   Library
                 </Link>
-              ) : (
+
+                <span aria-hidden className="mx-2 h-4 w-px bg-ink-black/10" />
+
+                <LogoutLink
+                  className={buttonVariants({ variant: "default", size: "sm" })}
+                >
+                  Sign out
+                </LogoutLink>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/#how-it-works"
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "px-4"
+                  )}
+                >
+                  How it works
+                </Link>
                 <LoginLink
-                  className={buttonVariants({
-                    variant: "ghost",
-                    size: "sm",
-                  })}
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }),
+                    "px-4"
+                  )}
                 >
                   Sign in
                 </LoginLink>
-              )}
 
-              {isUserAuthenticated ? (
-                <LogoutLink
-                  className={buttonVariants({
-                    size: "sm",
-                  })}
-                >
-                  Logout
-                </LogoutLink>
-              ) : (
+                <span aria-hidden className="mx-2 h-4 w-px bg-ink-black/10" />
+
                 <RegisterLink
-                  className={buttonVariants({
-                    size: "sm",
-                  })}
+                  className={buttonVariants({ variant: "default", size: "sm" })}
                 >
-                  Join now
+                  Get Synthara
                 </RegisterLink>
-              )}
-            </>
+              </>
+            )}
           </div>
         </div>
       </WidthWrapper>
