@@ -13,7 +13,11 @@ import { trpc } from "@/app/_trpc/client";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
-const UploadDropzone = ({ workspaceId }: { workspaceId: string }) => {
+const UploadDropzone = ({
+  onUploadComplete,
+}: {
+  onUploadComplete: () => void;
+}) => {
   const router = useRouter();
 
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -23,11 +27,25 @@ const UploadDropzone = ({ workspaceId }: { workspaceId: string }) => {
   const { startUpload } = useUploadThing("pdfUploader");
 
   const { mutate: startPolling } = trpc.getFile.useMutation({
-    onSuccess: () => {
-      router.push(`/workspace/${workspaceId}`);
+    onSuccess: (file) => {
+      if (file.uploadStatus === "SUCCESS") {
+        onUploadComplete();
+        window.location.href = "/library";
+      } else if (file.uploadStatus === "FAILED") {
+        toast({
+          title: "Upload failed",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      } else {
+        // If still processing, retry after a delay
+        setTimeout(() => {
+          startPolling({ key: file.key });
+        }, 1000);
+      }
     },
     retry: true,
-    retryDelay: 500,
+    retryDelay: 1000,
   });
 
   const startSimulatedProgress = () => {
@@ -55,29 +73,7 @@ const UploadDropzone = ({ workspaceId }: { workspaceId: string }) => {
         const progressInterval = startSimulatedProgress();
 
         // handle file uploading
-        const res = await startUpload(acceptedFile, {
-          onUploadBegin: () => {
-            console.log("Upload started");
-          },
-          onUploadProgress: (progress: number) => {
-            console.log("Upload progress:", progress);
-          },
-          onUploadComplete: (res: { key: string; url: string }[]) => {
-            console.log("Upload completed:", res);
-          },
-          onUploadError: (error: Error) => {
-            console.error("Upload error:", error);
-          },
-          onBeforeUploadBegin: (files: File[]) => {
-            console.log("Before upload:", files);
-          },
-          onClientUploadComplete: (res: { key: string; url: string }[]) => {
-            console.log("Client upload complete:", res);
-          },
-          onClientUploadError: (error: Error) => {
-            console.error("Client upload error:", error);
-          },
-        });
+        const res = await startUpload(acceptedFile);
 
         if (!res) {
           return toast({
@@ -164,7 +160,7 @@ const UploadDropzone = ({ workspaceId }: { workspaceId: string }) => {
   );
 };
 
-const UploadButton = ({ workspaceId }: { workspaceId: string }) => {
+const UploadButton = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   return (
@@ -181,7 +177,7 @@ const UploadButton = ({ workspaceId }: { workspaceId: string }) => {
       </DialogTrigger>
 
       <DialogContent>
-        <UploadDropzone workspaceId={workspaceId} />
+        <UploadDropzone onUploadComplete={() => setIsOpen(false)} />
       </DialogContent>
     </Dialog>
   );

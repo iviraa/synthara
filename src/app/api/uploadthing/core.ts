@@ -29,15 +29,7 @@ export const ourFileRouter = {
       if (!(await user).id || !(await user).email)
         throw new Error("UNAUTHORIZED");
 
-      // Get workspaceId from query parameters
-      const url = new URL(req.url);
-      const workspaceId = url.searchParams.get("workspaceId");
-
-      if (!workspaceId) {
-        throw new Error("Workspace ID is required");
-      }
-
-      return { userId: id, workspaceId };
+      return { userId: id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const createdFile = await db.file.create({
@@ -47,7 +39,6 @@ export const ourFileRouter = {
           userId: metadata.userId,
           url: file.url,
           uploadStatus: "PROCESSING",
-          workspaceId: metadata.workspaceId,
         },
       });
 
