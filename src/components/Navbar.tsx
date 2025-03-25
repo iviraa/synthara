@@ -22,6 +22,7 @@ const Navbar = async () => {
 
           <div className="hidden items-center space-x-4 sm:flex">
             <>
+              {isUserAuthenticated && (
               <Link
                 href="/workspace"
                 className={buttonVariants({
@@ -31,6 +32,7 @@ const Navbar = async () => {
               >
                 Workspace
               </Link>
+            )}
 
               {isUserAuthenticated ? (
                 <Link
