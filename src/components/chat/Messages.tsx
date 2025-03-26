@@ -33,7 +33,7 @@ const Messages = ({ workspaceId }: MessagesProps) => {
     isUserMessage: false,
     text: (
       <span className="flex h-full items-center justify-center">
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <Loader2 className="size-4 animate-spin" strokeWidth={1.5} />
       </span>
     ),
   };
@@ -57,7 +57,7 @@ const Messages = ({ workspaceId }: MessagesProps) => {
   }, [entry, fetchNextPage]);
 
   return (
-    <div className="flex max-h-[calc(100vh-3.5rem-7rem)] border-zinc-200 flex-1 flex-col-reverse gap-4 p-3 overflow-y-auto scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch">
+    <div className="scrollbar-hide flex min-h-0 flex-1 flex-col-reverse gap-3 overflow-y-auto px-5 pb-2 pt-6 scrolling-touch">
       {combinedMessages && combinedMessages.length > 0 ? (
         combinedMessages.map((message, i) => {
           const isNextMessageSamePerson =
@@ -73,28 +73,31 @@ const Messages = ({ workspaceId }: MessagesProps) => {
                 key={message.id}
               />
             );
-          } else
-            return (
-              <Message
-                message={message}
-                isNextMessageSamePerson={isNextMessageSamePerson}
-                key={message.id}
-              />
-            );
+          }
+          return (
+            <Message
+              message={message}
+              isNextMessageSamePerson={isNextMessageSamePerson}
+              key={message.id}
+            />
+          );
         })
       ) : isLoading ? (
-        <div className="w-full flex flex-col gap-2">
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
-          <Skeleton className="h-16" />
+        <div className="flex w-full flex-col gap-3">
+          <Skeleton height={56} borderRadius={20} />
+          <Skeleton height={56} borderRadius={20} />
+          <Skeleton height={56} borderRadius={20} />
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center gap-2">
-          <MessageSquare className="h-8 w-8 text-[#8D6C9F]" />
-          <h3 className="font-semibold text-xl">You&apos;re all set!</h3>
-          <p className="text-zinc-500 text-sm">
-            Ask your first question to get started.
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-ink-black/[0.04]">
+            <MessageSquare className="size-5 text-ink-black" strokeWidth={1.5} />
+          </span>
+          <h3 className="text-heading-sm font-medium text-ink-black">
+            You are all set
+          </h3>
+          <p className="max-w-[28ch] text-body-sm text-graphite">
+            Ask anything about the documents in this workspace to get started.
           </p>
         </div>
       )}

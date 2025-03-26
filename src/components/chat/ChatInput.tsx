@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
 import { useContext, useRef } from "react";
@@ -15,46 +15,39 @@ const ChatInput = ({ isDisabled }: ChatInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   return (
-    <div className="absolute bottom-0 left-0 w-full">
-      <div className="mx-2 flex flex-row gap-3 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl">
-        <div className="relative flex h-full flex-1 items-stretch md:flex-col">
-          <div className="relative flex flex-col w-full flex-grow p-4">
-            <div className="relative">
-              <Textarea
-                rows={1}
-                ref={textareaRef}
-                maxRows={4}
-                autoFocus
-                onChange={handleInputChange}
-                value={message}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-
-                    addMessage();
-
-                    textareaRef.current?.focus();
-                  }
-                }}
-                placeholder="Enter your question..."
-                className="resize-none pr-12 text-base py-3 scrollbar-thumb-blue scrollbar-thumb-rounded scrollbar-track-blue-lighter scrollbar-w-2 scrolling-touch"
-              />
-
-              <Button
-                disabled={isLoading || isDisabled}
-                className="absolute bottom-1.5 right-[8px] bg-[#8D6C9F]"
-                aria-label="send message"
-                onClick={() => {
-                  addMessage();
-
-                  textareaRef.current?.focus();
-                }}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+    <div className="shrink-0 px-4 pb-4 pt-2">
+      <div className="frost-card mx-auto flex max-w-3xl items-end gap-2 p-2">
+        <Textarea
+          rows={1}
+          ref={textareaRef}
+          maxRows={5}
+          autoFocus
+          onChange={handleInputChange}
+          value={message}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              addMessage();
+              textareaRef.current?.focus();
+            }
+          }}
+          disabled={isDisabled}
+          placeholder="Ask anything about this workspace"
+          className="scrollbar-hide min-h-[44px] resize-none border-none bg-transparent px-4 py-3 text-body text-ink-black placeholder:text-slate focus-visible:ring-0 focus-visible:ring-offset-0 scrolling-touch"
+        />
+        <Button
+          disabled={isLoading || isDisabled || !message.trim()}
+          onClick={() => {
+            addMessage();
+            textareaRef.current?.focus();
+          }}
+          variant="solid"
+          size="icon"
+          aria-label="Send message"
+          className="self-end"
+        >
+          <ArrowUp className="size-4" strokeWidth={1.75} />
+        </Button>
       </div>
     </div>
   );
