@@ -1,77 +1,79 @@
 # Synthara
 
-A research assistant that turns your papers and slides into a searchable, conversational knowledge base. Upload a PDF, ask questions in plain language, and get answers with citations pointing back to the exact passages.
-
-## Features
-
-- PDF document upload and analysis
-- Conversational Q&A across every document in your workspace
-- Citations on every answer, linked to the source page
-- Secure authentication with Kinde
-- Modern, responsive UI
+A research workspace for your PDFs. Drop in a paper and ask anything.
 
 ## How it works
 
 ```
-PDF → UploadThing → chunk + embed → Pinecone + Postgres → LangChain + OpenAI → cited answer
+PDF -> UploadThing -> Chunk + Embed -> Pinecone + Postgres -> Retrieval <- Question -> LangChain + OpenAI -> Cited Answer
 ```
 
-1. You upload a PDF into a workspace
-2. UploadThing stores it; a background job chunks every page and generates embeddings
-3. Embeddings are written to a Pinecone index; metadata goes into NeonDB via Prisma
-4. On each question, LangChain retrieves the top-k relevant chunks and asks OpenAI to answer using them
-5. The response comes back with inline citations that link to the source page
+1. A PDF is uploaded into a workspace through UploadThing, which stores the file and fires a webhook back to the app
+2. The webhook chunks the PDF page-by-page and embeds each chunk with OpenAI's embedding model
+3. Embeddings are written to Pinecone under a per-file namespace, file metadata is tracked in Postgres via Prisma
+4. Each question runs a similarity search across the workspace's namespaces and pulls the top-k chunks
+5. LangChain packs the chunks into a prompt and OpenAI streams the answer back with passage-level citations
 
-## Tech Stack
+## Stack
 
-- **Framework:** Next.js 15, TypeScript
-- **API:** tRPC
-- **Auth:** Kinde
-- **Database:** NeonDB, Prisma
-- **AI:** OpenAI, LangChain
-- **Vector Database:** Pinecone
-- **File Upload:** UploadThing
+- **Framework:** Next.js 15 App Router, React 18, TypeScript
+- **API:** tRPC, React Query
 - **Styling:** Tailwind CSS
+- **Auth:** Kinde
+- **Database:** Postgres via Prisma
+- **Vector store:** Pinecone
+- **Uploads:** UploadThing
+- **AI:** OpenAI, LangChain
 
-## Setup
-
-### Prerequisites
-
-- Node.js 18+
-- npm
-- An OpenAI API key
-- A Pinecone index
-- A Kinde account
-- An UploadThing account
-- A Postgres URL (NeonDB recommended)
-
-### Installation
-
-```bash
-git clone https://github.com/iviraa/synthara.git
-cd synthara
-
-npm install
-cp .env.example .env   # fill in the keys
-npx prisma generate
-npx prisma db push
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Project Structure
+## Project layout
 
 ```
 src/
-├── app/          # Next.js app router
-├── components/   # React components
-├── lib/          # Shared utilities
-├── hooks/        # Custom hooks
-├── db/           # Prisma client
-└── trpc/         # tRPC router and procedures
+├── app/
+│   ├── about/
+│   ├── privacy/
+│   ├── terms/
+│   ├── auth-callback/
+│   ├── workspace/              # Workspaces grid + detail (PDF + chat)
+│   ├── library/                # Cross-workspace file list
+│   ├── api/                    # Auth, message, upload, tRPC routes
+│   ├── icon.svg
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx                # Landing
+├── components/
+│   ├── chat/                   # ChatWrapper, Messages, Message, ChatInput
+│   ├── ui/
+│   ├── Navbar.tsx
+│   ├── StaticPageShell.tsx
+│   ├── DashboardComponent.tsx  # Library files list
+│   ├── WorkspaceComponent.tsx  # Workspaces grid
+│   ├── WorkspaceRenderer.tsx   # PDF viewer panel
+│   ├── PdfRenderer.tsx
+│   └── UploadButton.tsx
+├── lib/
+├── hooks/
+├── db/                         # Prisma client
+└── trpc/                       # Router and procedures
 ```
 
-## License
+## Run it
 
-MIT
+```bash
+# 1. Clone the repository and step in
+git clone https://github.com/iviraa/synthara.git
+cd synthara
+
+# 2. Install dependencies
+npm install
+
+# 3. Copy the example env file and fill in your keys
+cp .env.example .env
+
+# 4. Generate the Prisma client and push the schema to Postgres
+npx prisma generate
+npx prisma db push
+
+# 5. Start the dev server on http://localhost:3000
+npm run dev
+```
