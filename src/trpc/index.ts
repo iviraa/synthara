@@ -194,9 +194,6 @@ export const appRouter = router({
           updatedAt: true,
         },
       });
-      console.log("Files found:", files);
-
-      console.log("Fetching messages for workspace:", input.id);
 
       if (!files.length) {
         return { status: "PENDING" as const };
@@ -205,8 +202,6 @@ export const appRouter = router({
       const allUploaded = files.every(
         (file) => file.uploadStatus === "SUCCESS"
       );
-
-      console.log("saatus:", allUploaded);
 
       return { status: allUploaded ? "SUCCESS" : "FAILED" };
     }),

@@ -15,7 +15,7 @@ const isAuthed = middleware(async (opts) => {
     throw new Error("UNAUTHORIZED");
   }
 
-  return opts.next({ ctx: { userId: userId, user } }); // forward the context along
+  return opts.next({ ctx: { userId: userId, user } });
 });
 
 export const router = t.router;

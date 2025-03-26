@@ -17,11 +17,18 @@ function AuthCallbackContent() {
   }
 
   return (
-    <div className="w-full mt-24 flex justify-center">
-      <div className="flex flex-col items-center gap-2">
-        <Loader2 className="h-8 w-8 animate-spin text-zinc-800" />
-        <h3 className="font-semibold text-xl">Setting up your account...</h3>
-        <p>You will be redirected automatically.</p>
+    <div className="flex min-h-[60vh] items-center justify-center px-6">
+      <div className="frost-card flex flex-col items-center gap-3 px-12 py-10 text-center">
+        <Loader2
+          className="size-6 animate-spin text-ink-black"
+          strokeWidth={1.5}
+        />
+        <h3 className="text-heading-sm font-medium text-ink-black">
+          Setting up your workspace
+        </h3>
+        <p className="max-w-[36ch] text-body-sm text-graphite">
+          One moment. We are pulling your library together.
+        </p>
       </div>
     </div>
   );
@@ -29,7 +36,13 @@ function AuthCallbackContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center text-graphite">
+          Loading...
+        </div>
+      }
+    >
       <AuthCallbackContent />
     </Suspense>
   );

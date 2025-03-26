@@ -14,11 +14,8 @@ export const POST = async (req: NextRequest) => {
 
   const { getUser } = getKindeServerSession();
   const user = getUser();
-  const usersId = (await user).id;
-  console.log("usersId", usersId);
 
   const { id: userId } = await user;
-  console.log("userId", userId);
 
   if (!userId) return new Response("Unauthorized", { status: 401 });
 
@@ -52,14 +49,13 @@ export const POST = async (req: NextRequest) => {
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
-
   let allContexts: string[] = [];
 
   for (const fileId of fileIds) {
     const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
       //@ts-ignore
       pineconeIndex,
-      namespace: fileId, // Using fileId as namespace for each file
+      namespace: fileId,
     });
 
     const results = await vectorStore.similaritySearch(message, 4);
@@ -94,20 +90,20 @@ export const POST = async (req: NextRequest) => {
       {
         role: "user",
         content: `Use the following pieces of context (or previous conversaton if needed) to answer the users question in markdown format. \nIf you don't know the answer, just say that you don't know, don't try to make up an answer.
-        
+
   \n----------------\n
-  
+
   PREVIOUS CONVERSATION:
   ${formattedPrevMessages.map((message) => {
     if (message.role === "user") return `User: ${message.content}\n`;
     return `Assistant: ${message.content}\n`;
   })}
-  
+
   \n----------------\n
-  
+
   CONTEXT:
    ${allContexts.join("\n\n")}
-  
+
   USER INPUT: ${message}`,
       },
     ],

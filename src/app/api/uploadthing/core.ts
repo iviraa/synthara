@@ -9,21 +9,15 @@ import { z } from "zod";
 
 const f = createUploadthing();
 
-// FileRouter for your app, can contain multiple FileRoutes
 export const ourFileRouter = {
-  // Define as many FileRoutes as you like, each with a unique routeSlug
   pdfUploader: f({
     pdf: {
-      /**
-       * For full list of options and defaults, see the File Route API reference
-       * @see https://docs.uploadthing.com/file-routes#route-config
-       */
       maxFileSize: "16MB",
       maxFileCount: 1,
     },
   })
     .input(z.object({ workspaceId: z.string().optional() }))
-    .middleware(async ({ req, input }) => {
+    .middleware(async ({ input }) => {
       const { getUser } = getKindeServerSession();
       const user = getUser();
       const id = (await user).id;
@@ -47,11 +41,8 @@ export const ourFileRouter = {
 
       try {
         const response = await fetch(file.url);
-
         const blob = await response.blob();
-
         const loader = new PDFLoader(blob);
-
         const pageLevelDocs = await loader.load();
 
         const pineconeIndex = pinecone.Index("synthara");
@@ -67,21 +58,13 @@ export const ourFileRouter = {
         });
 
         await db.file.update({
-          where: {
-            id: createdFile.id,
-          },
-          data: {
-            uploadStatus: "SUCCESS",
-          },
+          where: { id: createdFile.id },
+          data: { uploadStatus: "SUCCESS" },
         });
       } catch (error) {
         await db.file.update({
-          where: {
-            id: createdFile.id,
-          },
-          data: {
-            uploadStatus: "FAILED",
-          },
+          where: { id: createdFile.id },
+          data: { uploadStatus: "FAILED" },
         });
       }
     }),
@@ -91,7 +74,7 @@ export const ourFileRouter = {
       maxFileCount: 1,
     },
   })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       const { getUser } = getKindeServerSession();
       const user = await getUser();
       if (!user?.id) throw new Error("UNAUTHORIZED");
@@ -108,12 +91,8 @@ export const ourFileRouter = {
         if (!workspace) throw new Error("Workspace not found for this user");
 
         await db.workspace.update({
-          where: {
-            id: workspace.id,
-          },
-          data: {
-            imageUrl: file.url,
-          },
+          where: { id: workspace.id },
+          data: { imageUrl: file.url },
         });
       } catch (error) {
         console.error("Image upload failed:", error);
